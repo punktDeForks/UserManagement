@@ -53,7 +53,14 @@ class RegistrationController extends ActionController
     public function registerAction(RegistrationFlow $registrationFlow)
     {
         // We remove already existing flows
-        $alreadyExistingFlows = $this->registrationFlowRepository->findByEmail($registrationFlow->getEmail());
+        $registrationFlows = $this->registrationFlowRepository->findAll();
+        $alreadyExistingFlows = [];
+        foreach ($registrationFlows as $registrationFlowFromDatabase) { /** @var RegistrationFlow $registrationFlowFromDatabase */
+            if ($registrationFlowFromDatabase->getAttributes()['activationEmail'] == $registrationFlow->getAttributes()['activationEmail']) {
+                $alreadyExistingFlows[] = $registrationFlowFromDatabase;
+            }
+        }
+
         if (count($alreadyExistingFlows) > 0) {
             foreach ($alreadyExistingFlows as $alreadyExistingFlow) {
                 $this->registrationFlowRepository->remove($alreadyExistingFlow);
