@@ -1,6 +1,9 @@
 <?php
 namespace Sandstorm\UserManagement\Domain\Service\Neos;
 
+use Neos\Flow\Mvc\Exception\NoSuchArgumentException;
+use Neos\Flow\Mvc\Routing\Exception\MissingActionNameException;
+use Neos\Neos\Exception;
 use Sandstorm\UserManagement\Domain\Service\RedirectTargetServiceInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Mvc\ActionRequest;
@@ -29,6 +32,16 @@ class NeosRedirectTargetService implements RedirectTargetServiceInterface
      */
     protected $redirectAfterLogout;
 
+    /**
+     * @param ControllerContext $controllerContext
+     * @param ActionRequest|null $originalRequest
+     * @return ActionRequest|NULL|string
+     * @throws NoSuchArgumentException
+     * @throws MissingActionNameException
+     * @throws \Neos\Flow\Property\Exception
+     * @throws \Neos\Flow\Security\Exception
+     * @throws Exception
+     */
     public function onAuthenticationSuccess(ControllerContext $controllerContext, ActionRequest $originalRequest = null)
     {
         // Check if config for redirect is done
@@ -55,12 +68,14 @@ class NeosRedirectTargetService implements RedirectTargetServiceInterface
         /** @var ActionRequest $actionRequest */
         $actionRequest = $controllerContext->getRequest();
 
-        if ($actionRequest->getHttpRequest()->hasArgument('forwardUrl') && strlen($actionRequest->getHttpRequest()->getArgument('forwardUrl'))) {
-            return $this->sanitizeForwardUrl($actionRequest->getHttpRequest()->getArgument('forwardUrl'));
+        if ($actionRequest->hasArgument('forwardUrl') && strlen($actionRequest->getArgument('forwardUrl'))) {
+            return $this->sanitizeForwardUrl($actionRequest->getArgument('forwardUrl'));
         } elseif ($actionRequest->getInternalArgument('__redirectAfterLogin')) {
             return $this->getNodeLinkingService()
                 ->createNodeUri($controllerContext, $actionRequest->getInternalArgument('__redirectAfterLogin'));
         }
+
+        return  null;
     }
 
     public function onLogout(ControllerContext $controllerContext)

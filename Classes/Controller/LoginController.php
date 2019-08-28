@@ -3,13 +3,16 @@ namespace Sandstorm\UserManagement\Controller;
 
 use Neos\Error\Messages\Error;
 use Neos\Flow\Mvc\Controller\ControllerContext;
+use Neos\Flow\Mvc\Exception\StopActionException;
+use Neos\Flow\Mvc\Exception\UnsupportedRequestTypeException;
 use Neos\Flow\Security\Exception\AuthenticationRequiredException;
+use Psr\Http\Message\UriFactoryInterface;
+use Psr\Http\Message\UriInterface;
 use Sandstorm\UserManagement\Domain\Service\RedirectTargetServiceInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Exception;
 use Neos\Flow\Mvc\ActionRequest;
 use Neos\Flow\Security\Authentication\Controller\AbstractAuthenticationController;
-
 use Neos\Flow\Core\Bootstrap;
 
 class LoginController extends AbstractAuthenticationController
@@ -42,6 +45,12 @@ class LoginController extends AbstractAuthenticationController
     protected $loginFailedBody;
 
     /**
+     * @Flow\Inject
+     * @var UriFactoryInterface
+     */
+    protected $uriFactory;
+
+    /**
      * SkipCsrfProtection is needed here because we will have errors otherwise if we render multiple
      * plugins on the same page
      *
@@ -57,11 +66,13 @@ class LoginController extends AbstractAuthenticationController
     /**
      * Is called after a request has been authenticated.
      *
-     * @param \Neos\Flow\Mvc\ActionRequest $originalRequest The request that was intercepted by the security framework, NULL if there was none
-     * @throws \Neos\Flow\Exception
-     * @return string
+     * @param ActionRequest $originalRequest The request that was intercepted by the security framework, NULL if there was none
+     * @return void
+     * @throws Exception
+     * @throws StopActionException
+     * @throws UnsupportedRequestTypeException
      */
-    protected function onAuthenticationSuccess(ActionRequest $originalRequest = null)
+    protected function onAuthenticationSuccess(ActionRequest $originalRequest = null): void
     {
         $this->emitAuthenticationSuccess($this->controllerContext, $originalRequest);
 
@@ -87,7 +98,7 @@ class LoginController extends AbstractAuthenticationController
      * custom action for this event. Most likely you would want
      * to redirect to some action showing the login form again.
      *
-     * @param \Neos\Flow\Security\Exception\AuthenticationRequiredException $exception The exception thrown while the authentication process
+     * @param AuthenticationRequiredException $exception The exception thrown while the authentication process
      * @return void
      */
     protected function onAuthenticationFailure(AuthenticationRequiredException $exception = null)
@@ -99,7 +110,9 @@ class LoginController extends AbstractAuthenticationController
     }
 
     /**
-     * Logs all active tokens out.
+     * @throws Exception
+     * @throws StopActionException
+     * @throws UnsupportedRequestTypeException
      */
     public function logoutAction()
     {
@@ -110,6 +123,7 @@ class LoginController extends AbstractAuthenticationController
         $result = $this->redirectTargetService->onLogout($this->controllerContext);
 
         if (is_string($result)) {
+            $this->redirectToUri($this->uriFactory->createUri($result));
             $this->redirectToUriAndShutdown($result);
         } elseif ($result instanceof ActionRequest) {
             $this->redirectToRequest($result);
