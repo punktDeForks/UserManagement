@@ -5,19 +5,28 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Security\Authentication\TokenInterface;
 use Neos\Flow\Security\Context;
 use Neos\FluidAdaptor\Core\ViewHelper\AbstractConditionViewHelper;
+use Neos\FluidAdaptor\Core\ViewHelper\Exception;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 
 class IfAuthenticatedViewHelper extends AbstractConditionViewHelper
 {
 
     /**
+     * @throws Exception
+     */
+    public function initializeArguments(): void
+    {
+        $this->registerArgument('authenticationProviderName', 'string', 'authentication provider name to check', false, 'Sandstorm.UserManagement:Login');
+    }
+
+
+    /**
      * Renders <f:then> child if any account is currently authenticated, otherwise renders <f:else> child.
      *
-     * @param string $authenticationProviderName
      * @return string the rendered string
      * @api
      */
-    public function render($authenticationProviderName = 'Sandstorm.UserManagement:Login')
+    public function render(): string
     {
         if (static::evaluateCondition($this->arguments, $this->renderingContext)) {
             return $this->renderThenChild();
@@ -27,7 +36,7 @@ class IfAuthenticatedViewHelper extends AbstractConditionViewHelper
     }
 
     /**
-     * @param null $arguments
+     * @param array $arguments
      * @param RenderingContextInterface $renderingContext
      * @return bool
      */
