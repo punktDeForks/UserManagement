@@ -91,7 +91,31 @@ class RegistrationController extends ActionController
     /**
      * @param string $token
      */
-    public function activateAccountAction($token)
+    public function activateAccountAction(string $token)
+    {
+        /* @var $registrationFlow \Sandstorm\UserManagement\Domain\Model\RegistrationFlow */
+        $registrationFlow = $this->registrationFlowRepository->findOneByActivationToken($token);
+        if (!$registrationFlow) {
+            $this->view->assign('tokenNotFound', true);
+
+            return;
+        }
+
+        if (!$registrationFlow->hasValidActivationToken()) {
+            $this->view->assign('tokenTimeout', true);
+
+            return;
+        }
+
+        $this->view->assignMultiple([
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * @param string $token
+     */
+    public function confirmAccountAction($token)
     {
         /* @var $registrationFlow \Sandstorm\UserManagement\Domain\Model\RegistrationFlow */
         $registrationFlow = $this->registrationFlowRepository->findOneByActivationToken($token);

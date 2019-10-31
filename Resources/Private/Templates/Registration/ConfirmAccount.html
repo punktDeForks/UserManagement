@@ -32,13 +32,10 @@
     </div>
   </f:if>
 
-  <f:if condition="{token}">
-    <div class="callout alert">
-      <f:link.action class="btn btn-primary" action="confirmAccount" controller="Registration"
-                     package="Sandstorm.UserManagement" arguments="{token: token}">
-
-        Activate Account
-      </f:link.action>
+  <f:if condition="{success}">
+    <div class="callout success">
+      <p>Sie sind nun aktiviert und können sich auf unserer Website anmelden.
+      </p>
     </div>
     <!-- This can cause issues in the Neos use case, as then the Login Form will be displayed in the registration plugin's subcontext, which might
     not make sense. Therefore, deactivated for the time being. Feel free to uncomment in your own template. -->
